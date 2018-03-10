@@ -115,7 +115,7 @@
         console.log("API function is being called")
         var searchTerm = $(this).attr("data-value")
         // Build the queryURL for our API functionality
-        var queryURL = "http://api.giphy.com/v1/gifs/search?q=" + searchTerm +
+        var queryURL = "https://api.giphy.com/v1/gifs/search?q=" + searchTerm +
             "&api_key=JvDHIijoJ8swdFvrFVkvLTO83vt9ODZ6&limit=10";
         // Clear the gif-population area to make way for our new gifs
         $("#gif-population").empty()
