@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <!-- Bootstrap is used to make game look nicer -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7"
+        crossorigin="anonymous">
+    <!-- <link rel="stylesheet" type="text/css" href="assets/css/style.css"> -->
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <title>Gif API pulls</title>
+</head>
+
+<body>
+
+    <!-- Only really need a few elements: Box that takes input from the user, a space to insert the buttons, a space to insert the gifs when you press the button, and a search button. -->
+
+    <div class="container">
+        <div id="button-box">
+
+        </div>
+        <div id="search-tool">
+            <form id="topic-form">
+                <label for="topic-input">Add another topic</label>
+                <input type="text" id="topic-input">
+                <br>
+
+                <!-- This is the submit button -->
+                <input id="add-topic" type="submit" value="Add a search topic">
+
+            </form>
+        </div>
+        <div id="gif-population">
+
+        </div>
+    </div>
+
+</body>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+<script type="text/javascript">
+    // Initialize the variables
+    var topics = [
+        "community",
+        "galavant",
+        "psyche",
+        "archer",
+        "rick and morty",
+        "brooklyn 99"
+    ]
+
+
+    // This bit creates the buttons for the array.
+    function newButton(topic) {
+        // Sanity check so we don't get multiple buttons
+        // if ($("button").attr("data-value") === topic) {
+        //     console.log("Attempting to create multiple buttons, aborting")
+        //     return
+        // } else {
+        // New element for the button
+        element = $("<button class='topic-button'>")
+        // Give that button some stuff we can use to identify it later
+        // element.attri("class", "button")
+        // Ought to give each button a unique identifier based on the topic.
+        element.attr("data-value", topic)
+        // Put text on the button
+        element.text(topic)
+        // Append your new button to the button-box div
+        $("#button-box").append(element)
+        // }
+
+    }
+
+    // For the sake of certainty, let's clear the div box and cycle through our array every time we add a new button
+    // Our function will take the array as an argument
+    function displayButtons(topics) {
+        // First clear the board
+        $("#button-box").empty()
+        // Then let's start adding our items - we have a function for this
+        for (var i = 0; i < topics.length; i++) {
+            // This ought to cycle through every topic in the array and append a new button for it
+            // with a unique identifier - value = "topic-button" for later reference
+            newButton(topics[i])
+        }
+
+    }
+
+    // Create the bit that handles clicking on the button creation part.
+
+    // Event listener that handles additions of topics to our buttons
+    $("#add-topic").on("click", function (event) {
+        // Don't do default
+        console.log("Recognizing you pushed the button")
+
+        event.preventDefault()
+        // Grab user input
+        var input = $("#topic-input").val().trim()
+        console.log("I think the input value is " + input)
+        // Does this empty the input box?
+        // $("#topic-input").val("")
+
+        // Push into the topics array
+        topics.push(input)
+        console.log("The new topics array is ")
+        console.log(topics)
+        displayButtons(topics)
+
+    });
+
+
+    // TO-DO Use the values of the button clicked to generate the search term
+    function callTheAPI() {
+        console.log("API function is being called")
+        var searchTerm = $(this).attr("data-value")
+        // Build the queryURL for our API functionality
+        var queryURL = "http://api.giphy.com/v1/gifs/search?q=" + searchTerm +
+            "&api_key=JvDHIijoJ8swdFvrFVkvLTO83vt9ODZ6&limit=10";
+        // Clear the gif-population area to make way for our new gifs
+        $("#gif-population").empty()
+
+        // Uses AJAX to ping the giphy API for the information we want using the query and limit we wnat
+        $.ajax({
+                url: queryURL,
+                method: "GET"
+            })
+            // When we get the object in return, do some work on it
+            .then(function (response) {
+                console.log(response)
+                // Create a div to store this stuff
+                var conjuredDiv = $("<div id='conjured'>")
+                $("#gif-population").append(conjuredDiv)
+                // Loop through the returned array of gifs in response.data
+                for (var i = 0; i < response.data.length; i++) {
+                    addGif(response.data[i])
+                }
+            });
+    }
+
+    function addGif(gif) {
+        // Create the gif's home, gifHeim
+        var gifImg = $("<img>")
+        // Construct the img using information in the API's returned object, considering
+        // We're going to have to make it start still, and animate later.
+        gifImg.attr("src", gif.images.fixed_height_still.url)
+        gifImg.attr("alt", gif.title)
+        gifImg.attr("data-still", gif.images.fixed_height_still.url)
+        gifImg.attr("data-animate", gif.images.fixed_height.url)
+        gifImg.attr("data-state","still")
+        gifImg.attr("class","gif")
+        $('#conjured').append(gifImg)
+
+    }
+
+    // Blatantly rip out the on click watcher from activity 6.3 that switches states for gifs
+    // Rrrrrrrrrrrip
+    // Oh, wrap it in this function so I can call it every time I refresh the page.
+    // TO-DO rename this awful thing
+    $(document).on("click",".gif", function() {
+      // The attr jQuery method allows us to get or set the value of any attribute on our HTML element
+      var state = $(this).attr("data-state");
+      // If the clicked image's state is still, update its src attribute to what its data-animate value is.
+      // Then, set the image's data-state to animate
+      // Else set src to the data-still value
+      if (state === "still") {
+        $(this).attr("src", $(this).attr("data-animate"));
+        $(this).attr("data-state", "animate");
+      } else {
+        $(this).attr("src", $(this).attr("data-still"));
+        $(this).attr("data-state", "still");
+      }
+    });
+    
+
+    // Add an event listener to let us use the buttons to call from the API
+    $(document).on("click", ".topic-button", callTheAPI);
+
+    // Render the buttons to start the entire thing
+
+    displayButtons(topics)
+</script>
+
+</html>
